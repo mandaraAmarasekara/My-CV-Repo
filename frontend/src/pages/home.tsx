@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Github, Linkedin, Mail, ExternalLink, Award, Code, Palette, Database, Cpu, Trophy, Star, ChevronDown, Users, Briefcase, MapPin, Calendar, Zap } from 'lucide-react';
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import Navbar from '../components/Navbar'; // Ensure this matches your file path
+import Navbar from '../components/Navbar';
+import React from "react"; // Ensure this matches your file path
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
@@ -14,87 +15,183 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const projects = [
-    {
-      title: "E-Commerce Platform",
-      description: "Full-stack shopping experience with payment integration, real-time inventory, and admin dashboard",
-      tech: ["React", "Node.js", "MongoDB", "Stripe"],
-      image: "https://images.unsplash.com/photo-1557821552-17105176677c?w=800&h=500&fit=crop",
-      link: "#",
-      featured: true
-    },
-    {
-      title: "Task Management System",
-      description: "Collaborative project management tool with drag-and-drop interface and team chat",
-      tech: ["Next.js", "TypeScript", "PostgreSQL"],
-      image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=500&fit=crop",
-      link: "#"
-    },
-    {
-      title: "Portfolio Analytics",
-      description: "Real-time analytics dashboard for tracking portfolio performance and visitor insights",
-      tech: ["React", "D3.js", "Firebase"],
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop",
-      link: "#"
-    },
-    {
-      title: "Social Media App",
-      description: "Modern social platform with stories, posts, and real-time messaging features",
-      tech: ["React Native", "GraphQL", "AWS"],
-      image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&h=500&fit=crop",
-      link: "#"
-    }
-  ];
+  type Project = {
+  title: string;
+  description: string;
+  image: string;
+  link: string;
+  featured?: boolean;
+  tech: string[];
+};
 
-  const skills = [
-    { name: "React & Next.js", level: 90, icon: Code, color: "from-blue-500 to-cyan-500" },
-    { name: "JavaScript / TypeScript", level: 85, icon: Cpu, color: "from-cyan-500 to-teal-500" },
-    { name: "UI/UX Design", level: 80, icon: Palette, color: "from-teal-500 to-emerald-500" },
-    { name: "Node.js & Express", level: 75, icon: Database, color: "from-blue-600 to-indigo-600" },
-    { name: "MongoDB & SQL", level: 80, icon: Database, color: "from-sky-500 to-blue-500" },
-    { name: "Tailwind CSS", level: 95, icon: Palette, color: "from-cyan-400 to-blue-400" }
-  ];
+const STORAGE_KEY = "portfolio_projects";
 
-  const achievements = [
-    {
-      title: "Dean's List",
-      organization: "SLIIT",
-      year: "2024",
-      description: "Recognized for academic excellence with GPA above 3.5",
-      icon: Trophy,
-      color: "text-yellow-400"
-    },
-    {
-      title: "Hackathon Winner",
-      organization: "TechFest 2024",
-      year: "2024",
-      description: "First place in web development category",
-      icon: Zap,
-      color: "text-cyan-400"
-    },
-    {
-      title: "Open Source Contributor",
-      organization: "GitHub",
-      year: "2023-2024",
-      description: "Contributed to 15+ open source projects",
-      icon: Users,
-      color: "text-emerald-400"
-    },
-    {
-      title: "Web Design Certificate",
-      organization: "Coursera",
-      year: "2023",
-      description: "Completed advanced UI/UX design specialization",
-      icon: Award,
-      color: "text-blue-400"
-    }
-  ];
+const [projects, setProjects] = useState<Project[]>([]);
 
-  const handleMouseMove = (e) => {
-    const { clientX, clientY } = e;
-    mouseX.set(clientX);
-    mouseY.set(clientY);
-  };
+useEffect(() => {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  console.log("HOME READ:", saved);
+
+  if (!saved) return;
+
+  const parsed = JSON.parse(saved);
+  console.log("PARSED:", parsed);
+
+  setProjects(
+    parsed.map((p: any) => ({
+      ...p,
+      tech: Array.isArray(p.tech)
+        ? p.tech
+        : p.tech.split(",").map((t: string) => t.trim())
+    }))
+  );
+}, []);
+
+
+  type AdminSkill = {
+  id: string;
+  name: string;
+  level: string; // "90" or "90%"
+};
+
+const [skills, setSkills] = useState<
+  {
+    name: string;
+    level: number;
+    icon: any;
+    color: string;
+  }[]
+>([]);
+
+useEffect(() => {
+  const saved = localStorage.getItem("portfolio_skills");
+  if (!saved) return;
+
+  const parsed: AdminSkill[] = JSON.parse(saved);
+
+  const mappedSkills = parsed.map((s) => {
+    const key = s.name.toLowerCase();
+    const matchedKey = Object.keys(SKILL_STYLES).find(k =>
+      key.includes(k)
+    );
+
+    return {
+      name: s.name,
+      level: parseInt(s.level), // "90%" → 90
+      icon: matchedKey ? SKILL_STYLES[matchedKey].icon : Code,
+      color: matchedKey
+        ? SKILL_STYLES[matchedKey].color
+        : "from-slate-500 to-slate-600",
+    };
+  });
+
+  setSkills(mappedSkills);
+}, []);
+
+
+const SKILL_STYLES: Record<string, { icon: any; color: string }> = {
+  react: { icon: Code, color: "from-blue-500 to-cyan-500" },
+  next: { icon: Code, color: "from-blue-500 to-cyan-500" },
+  javascript: { icon: Cpu, color: "from-cyan-500 to-teal-500" },
+  typescript: { icon: Cpu, color: "from-cyan-500 to-teal-500" },
+  ui: { icon: Palette, color: "from-teal-500 to-emerald-500" },
+  ux: { icon: Palette, color: "from-teal-500 to-emerald-500" },
+  node: { icon: Database, color: "from-blue-600 to-indigo-600" },
+  express: { icon: Database, color: "from-blue-600 to-indigo-600" },
+  mongo: { icon: Database, color: "from-sky-500 to-blue-500" },
+  sql: { icon: Database, color: "from-sky-500 to-blue-500" },
+  tailwind: { icon: Palette, color: "from-cyan-400 to-blue-400" },
+};
+
+
+  type AdminAchievement = {
+  id: string;
+  title: string;
+  date: string;
+  description: string;
+};
+
+const [achievements, setAchievements] = useState<
+  {
+    title: string;
+    date: string;
+    description: string;
+    icon: any;
+    color: string;
+  }[]
+>([]);
+
+
+const ACHIEVEMENT_STYLES: Record<
+  string,
+  { icon: any; color: string }
+> = {
+  dean: { icon: Trophy, color: "text-yellow-400" },
+  hackathon: { icon: Zap, color: "text-cyan-400" },
+  open: { icon: Users, color: "text-emerald-400" },
+  github: { icon: Users, color: "text-emerald-400" },
+  certificate: { icon: Award, color: "text-blue-400" },
+  award: { icon: Award, color: "text-blue-400" },
+};
+
+
+useEffect(() => {
+  const saved = localStorage.getItem("portfolio_achievements");
+  if (!saved) return;
+
+  const parsed: AdminAchievement[] = JSON.parse(saved);
+
+  const mapped = parsed.map((a) => {
+    const key = a.title.toLowerCase();
+    const matchedKey = Object.keys(ACHIEVEMENT_STYLES).find(k =>
+      key.includes(k)
+    );
+
+    return {
+      title: a.title,
+      date: a.date,
+      description: a.description,
+      icon: matchedKey ? ACHIEVEMENT_STYLES[matchedKey].icon : Trophy,
+      color: matchedKey
+        ? ACHIEVEMENT_STYLES[matchedKey].color
+        : "text-slate-400",
+    };
+  });
+
+  setAchievements(mapped);
+}, []);
+
+
+  
+
+const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const { clientX, clientY } = e;
+  mouseX.set(clientX);
+  mouseY.set(clientY);
+};
+
+type AdminEducation = {
+  id: string;
+  degree: string;
+  school: string;
+  year: string;
+  description?: string;
+};
+
+const [education, setEducation] = useState<AdminEducation[]>([]);
+
+
+useEffect(() => {
+  const saved = localStorage.getItem("portfolio_education");
+  if (!saved) return;
+
+  const parsed: AdminEducation[] = JSON.parse(saved);
+  setEducation(parsed);
+}, []);
+
+
+
+
 
   const springConfig = { damping: 25, stiffness: 300 };
   const mouseXSpring = useSpring(mouseX, springConfig);
@@ -426,105 +523,134 @@ export default function HomePage() {
       </section>
 
       {/* ACHIEVEMENTS - ADDED ID="ACHIEVEMENTS" */}
-      <section id="achievements" className="py-24 relative bg-slate-900/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold mb-4">Achievements</h2>
-          </div>
+<section id="achievements" className="py-24 relative bg-slate-900/30">
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="mb-12">
+      <h2 className="text-3xl font-bold mb-4">Achievements</h2>
+    </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {achievements.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex gap-5 p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
-                >
-                  <div className={`shrink-0 w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center ${item.color}`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-slate-200">{item.title}</h3>
-                    <p className="text-cyan-500 text-sm mb-1">{item.organization} • {item.year}</p>
-                    <p className="text-slate-400 text-sm">{item.description}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* EDUCATION - ADDED ID="EDUCATION" */}
-      <section id="education" className="py-24 relative">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-10"
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {achievements.map((item, idx) => {
+        const Icon = item.icon;
+        return (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: idx * 0.1 }}
+            className="flex gap-5 p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
+          >
+            <div
+              className={`shrink-0 w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center ${item.color}`}
             >
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
-                  <Award className="w-6 h-6" />
-                </div>
-                <h2 className="text-2xl font-bold">Education</h2>
-              </div>
-              
-              <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-100">BSc (Hons) in Information Technology</h3>
-                <div className="flex items-center gap-2 text-slate-400 text-sm">
-                  <MapPin className="w-4 h-4" />
-                  <span>SLIIT Malabe, Sri Lanka</span>
-                </div>
-                <div className="flex items-center gap-2 text-cyan-500 text-sm pt-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>2023 – 2027</span>
-                </div>
-              </div>
-              
-              <div className="mt-6 pt-6 border-t border-slate-800 text-slate-400 leading-relaxed">
-                Specializing in modern software architecture with a strong focus on full-stack development. 
-                Consistently maintaining a high GPA while actively participating in tech communities.
-              </div>
-            </motion.div>
+              <Icon className="w-6 h-6" />
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-10"
-            >
-               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                  <Star className="w-6 h-6" />
-                </div>
-                <h2 className="text-2xl font-bold">Key Focus Areas</h2>
-              </div>
+            <div>
+              <h3 className="font-bold text-lg text-slate-200">
+                {item.title}
+              </h3>
+              <p className="text-cyan-500 text-sm mb-1">
+                {item.date}
+              </p>
+              <p className="text-slate-400 text-sm">
+                {item.description}
+              </p>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  </div>
+</section>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  "Full-Stack Engineering", "Cloud Architecture", 
-                  "Responsive UI/UX", "API Development",
-                  "Database Management", "Agile Methodologies"
-                ].map((area, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 border border-slate-800/50">
-                    <div className="w-2 h-2 rounded-full bg-cyan-500" />
-                    <span className="text-sm font-medium text-slate-300">{area}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
+     {/* EDUCATION - ADDED ID="EDUCATION" */}
+<section id="education" className="py-24 relative">
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+      
+      {/* LEFT CARD */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-10"
+      >
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <Award className="w-6 h-6" />
           </div>
+          <h2 className="text-2xl font-bold">Education</h2>
         </div>
-      </section>
+
+        <div className="space-y-6">
+          {education.map((edu) => (
+            <div key={edu.id} className="space-y-1">
+              <h3 className="text-xl font-bold text-slate-100">
+                {edu.degree}
+              </h3>
+
+              <div className="flex items-center gap-2 text-slate-400 text-sm">
+                <MapPin className="w-4 h-4" />
+                <span>{edu.school}</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-cyan-500 text-sm pt-1">
+                <Calendar className="w-4 h-4" />
+                <span>{edu.year}</span>
+              </div>
+
+              {edu.description && (
+                <div className="mt-4 pt-4 border-t border-slate-800 text-slate-400 leading-relaxed">
+                  {edu.description}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* RIGHT CARD (STATIC – KEEP AS IS) */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.2 }}
+        className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-10"
+      >
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <Star className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-bold">Key Focus Areas</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            "Full-Stack Engineering",
+            "Cloud Architecture",
+            "Responsive UI/UX",
+            "API Development",
+            "Database Management",
+            "Agile Methodologies",
+          ].map((area, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 border border-slate-800/50"
+            >
+              <div className="w-2 h-2 rounded-full bg-cyan-500" />
+              <span className="text-sm font-medium text-slate-300">
+                {area}
+              </span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  </div>
+</section>
+
 
       {/* CTA SECTION - ADDED ID="CONTACT" */}
       <section id="contact" className="py-24 sm:py-32 relative overflow-hidden">
